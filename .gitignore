@@ -7,5 +7,16 @@ venv/
 .env
 .env.*
 
+# Uploads
+uploads/
+app/uploads/
+reports/
+
+# Logs
+*.log
+
+# Editor
+.vscode/
+
 # OS
 .DS_Store

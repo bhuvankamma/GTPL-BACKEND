@@ -1,8 +1,10 @@
-import psycopg2
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
+
+from db import get_cursor
+from routes.candidate_evaluation import router as candidate_router
 
 app = FastAPI()
 
@@ -18,29 +20,13 @@ app.add_middleware(
 )
 
 # --------------------------------------------------
-# DATABASE
+# CANDIDATE EVALUATION ROUTER
 # --------------------------------------------------
-def get_connection():
-    try:
-        return psycopg2.connect(
-            host="localhost",
-            port=5432,
-            database="hrms_crm",
-            user="hrms_user",
-            password="Loveudad43#",
-            connect_timeout=5
-        )
-    except Exception as e:
-        print("DB ERROR:", e)
-        return None
-
-
-def get_cursor():
-    conn = get_connection()
-    if not conn:
-        raise HTTPException(status_code=500, detail="Database connection failed")
-    return conn, conn.cursor()
-
+app.include_router(
+    candidate_router,
+    prefix="/candidates",
+    tags=["Candidate Evaluation"]
+)
 
 # ==================================================
 # ================= EMPLOYEES ======================
@@ -81,7 +67,6 @@ def create_employee(emp: EmployeeCreate):
     finally:
         cur.close()
         conn.close()
-
 
 # ==================================================
 # ================= ASSETS (UPDATED) ===============
@@ -206,7 +191,6 @@ def delete_asset(asset_id: int):
         cur.close()
         conn.close()
 
-
 # ==================================================
 # ================= LEAVE ==========================
 # ==================================================
@@ -233,7 +217,6 @@ def approve_leave(data: LeaveApprove):
         cur.close()
         conn.close()
 
-
 # ==================================================
 # ================= ANNOUNCEMENTS ==================
 # ==================================================
@@ -259,7 +242,6 @@ def create_announcement(data: AnnouncementCreate):
     finally:
         cur.close()
         conn.close()
-
 
 # ==================================================
 # ================= DASHBOARD ======================
@@ -338,7 +320,6 @@ def department_strength():
         cur.close()
         conn.close()
 
-
 # ==================================================
 # ================= REWARDS ========================
 # ==================================================
@@ -364,3 +345,4 @@ def rewards(data: dict):
     finally:
         cur.close()
         conn.close()
+
