@@ -2,9 +2,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
+from fastapi import Body, HTTPException
 
 from db import get_cursor
 from routes.candidate_evaluation import router as candidate_router
+from crud import employee_profile_edit  # <-- ADDED (your CRUD module)
 
 app = FastAPI()
 
@@ -67,6 +69,50 @@ def create_employee(emp: EmployeeCreate):
     finally:
         cur.close()
         conn.close()
+
+## ==================================================
+# ============ EMPLOYEE PROFILE ====================
+# ==================================================
+
+@app.get("/employee/{emp_code}")
+def get_profile(emp_code: str):
+    profile = employee_profile_edit.get_employee_profile(emp_code)
+    if not profile.get("employee"):
+        raise HTTPException(status_code=404, detail="Employee not found")
+    return profile
+
+
+@app.put("/employee/{emp_code}/personal")
+def update_personal(emp_code: str, data: dict = Body(...)):
+    return employee_profile_edit.update_personal(emp_code, data)
+
+
+@app.put("/employee/{emp_code}/official")
+def update_official(emp_code: str, data: dict = Body(...)):
+    return employee_profile_edit.update_official(emp_code, data)
+
+
+@app.put("/employee/{emp_code}/family")
+def update_family(emp_code: str, data: dict = Body(...)):
+    return employee_profile_edit.update_family(emp_code, data)
+
+
+@app.put("/employee/{emp_code}/vehicle")
+def update_vehicle(emp_code: str, data: dict = Body(...)):
+    return employee_profile_edit.update_vehicle(emp_code, data)
+
+
+@app.put("/employee/{emp_code}/statutory")
+def update_statutory(emp_code: str, data: dict = Body(...)):
+    return employee_profile_edit.upsert_statutory(emp_code, data)
+
+
+@app.put("/employee/{emp_code}/emergency-contacts")
+def update_contacts(emp_code: str, data: dict = Body(...)):
+    return employee_profile_edit.upsert_emergency_contacts(
+        emp_code,
+        data.get("contacts", [])
+    )
 
 # ==================================================
 # ================= ASSETS (UPDATED) ===============
