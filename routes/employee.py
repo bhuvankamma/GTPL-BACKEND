@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from db import get_cursor
 from utils.id_card_pdf import generate_id_card
 from utils.s3_client import upload_file_to_s3
+import os
 
 router = APIRouter()
 
@@ -10,23 +11,23 @@ def get_employee_id_card(employee_code: str):
     conn, cur = get_cursor()
 
     try:
-        # 1️⃣ Check if employee exists and fetch basic details
+        # 1️⃣ Fetch employee
         cur.execute("""
             SELECT emp_code, first_name
             FROM employees
             WHERE emp_code = %s
         """, (employee_code,))
-        employee_row = cur.fetchone()
+        row = cur.fetchone()
 
-        if not employee_row:
+        if not row:
             raise HTTPException(status_code=404, detail="Employee not found")
 
         employee = {
-            "emp_code": employee_row[0],
-            "first_name": employee_row[1]
+            "emp_code": row[0],
+            "first_name": row[1]
         }
 
-        # 2️⃣ Check if ID card already exists
+        # 2️⃣ Check existing document
         cur.execute("""
             SELECT document_url, uploaded_at
             FROM employee_documents
@@ -43,7 +44,7 @@ def get_employee_id_card(employee_code: str):
                 "uploaded_at": doc[1]
             }
 
-        # 3️⃣ Insert record if not exists
+        # 3️⃣ Ensure DB record
         if not doc:
             cur.execute("""
                 INSERT INTO employee_documents (emp_code, document_type)
@@ -54,13 +55,11 @@ def get_employee_id_card(employee_code: str):
         # 4️⃣ Generate PDF locally
         local_pdf_path = generate_id_card(employee)
 
-        # 5️⃣ Upload PDF to S3
-        s3_url = upload_file_to_s3(
-            local_pdf_path,
-            folder="id_cards"
-        )
+        # 5️⃣ Upload to S3
+        s3_key = f"id_cards/{employee_code}.pdf"
+        s3_url = upload_file_to_s3(local_pdf_path, s3_key)
 
-        # 6️⃣ Update DB with S3 URL
+        # 6️⃣ Save S3 URL
         cur.execute("""
             UPDATE employee_documents
             SET document_url = %s,
