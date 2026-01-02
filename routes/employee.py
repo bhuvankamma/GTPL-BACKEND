@@ -25,17 +25,17 @@ def get_employee_id_card(employee_code: str):
             "first_name": employee_row[1]
         }
 
-        # 2️⃣ Check if ID card already exists
+        # 2️⃣ Check if ID card record exists
         cur.execute("""
             SELECT document_url, uploaded_at
             FROM employee_documents
             WHERE emp_code = %s
               AND document_type = 'ID_CARD'
-            ORDER BY uploaded_at DESC
             LIMIT 1
         """, (employee_code,))
         doc = cur.fetchone()
 
+        # 3️⃣ If record exists and PDF already generated
         if doc and doc[0]:
             return {
                 "status": "ID_CARD_EXISTS",
@@ -43,7 +43,7 @@ def get_employee_id_card(employee_code: str):
                 "uploaded_at": doc[1]
             }
 
-        # 3️⃣ Create ID card DB record if not exists
+        # 4️⃣ If record does not exist → create it
         if not doc:
             cur.execute("""
                 INSERT INTO employee_documents (emp_code, document_type)
@@ -51,10 +51,10 @@ def get_employee_id_card(employee_code: str):
             """, (employee_code,))
             conn.commit()
 
-        # 4️⃣ Generate ID card PDF locally
+        # 5️⃣ Generate PDF
         pdf_path = generate_id_card(employee)
 
-        # 5️⃣ Update DB with generated PDF path
+        # 6️⃣ Update DB with PDF path
         cur.execute("""
             UPDATE employee_documents
             SET document_url = %s,
