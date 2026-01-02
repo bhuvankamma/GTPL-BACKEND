@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from db import get_cursor
 from utils.id_card_pdf import generate_id_card
+from utils.s3_client import upload_file_to_s3
 
 router = APIRouter()
 
@@ -25,7 +26,7 @@ def get_employee_id_card(employee_code: str):
             "first_name": employee_row[1]
         }
 
-        # 2️⃣ Check if ID card record exists
+        # 2️⃣ Check if ID card already exists
         cur.execute("""
             SELECT document_url, uploaded_at
             FROM employee_documents
@@ -35,7 +36,6 @@ def get_employee_id_card(employee_code: str):
         """, (employee_code,))
         doc = cur.fetchone()
 
-        # 3️⃣ If record exists and PDF already generated
         if doc and doc[0]:
             return {
                 "status": "ID_CARD_EXISTS",
@@ -43,7 +43,7 @@ def get_employee_id_card(employee_code: str):
                 "uploaded_at": doc[1]
             }
 
-        # 4️⃣ If record does not exist → create it
+        # 3️⃣ Insert record if not exists
         if not doc:
             cur.execute("""
                 INSERT INTO employee_documents (emp_code, document_type)
@@ -51,22 +51,28 @@ def get_employee_id_card(employee_code: str):
             """, (employee_code,))
             conn.commit()
 
-        # 5️⃣ Generate PDF
-        pdf_path = generate_id_card(employee)
+        # 4️⃣ Generate PDF locally
+        local_pdf_path = generate_id_card(employee)
 
-        # 6️⃣ Update DB with PDF path
+        # 5️⃣ Upload PDF to S3
+        s3_url = upload_file_to_s3(
+            local_pdf_path,
+            folder="id_cards"
+        )
+
+        # 6️⃣ Update DB with S3 URL
         cur.execute("""
             UPDATE employee_documents
             SET document_url = %s,
                 uploaded_at = NOW()
             WHERE emp_code = %s
               AND document_type = 'ID_CARD'
-        """, (pdf_path, employee_code))
+        """, (s3_url, employee_code))
         conn.commit()
 
         return {
             "status": "ID_CARD_PDF_GENERATED",
-            "file_path": pdf_path
+            "document_url": s3_url
         }
 
     finally:
