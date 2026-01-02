@@ -1,12 +1,25 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Form, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
 from fastapi import Body, HTTPException
 
-from db import get_cursor
+from sqlalchemy.orm import Session
+# Import your DB helpers from db.py
+from db import get_cursor, get_db
+
+# Only importing candidate router as employee_tracking is missing
 from routes.candidate_evaluation import router as candidate_router
+
 from crud import employee_profile_edit  # <-- ADDED (your CRUD module)
+
+
+from routes.employee import router as employee_router
+
+
+
+
+# 1. Initialize the FastAPI app
 
 app = FastAPI()
 
@@ -22,13 +35,50 @@ app.add_middleware(
 )
 
 # --------------------------------------------------
-# CANDIDATE EVALUATION ROUTER
+
+# CANDIDATE EVALUATION ROUTE --------------------------------------------------
+
+# ROUTER INCLUSIONS
 # --------------------------------------------------
+# Candidate router is active
+
 app.include_router(
     candidate_router,
     prefix="/candidates",
     tags=["Candidate Evaluation"]
 )
+app.include_router(
+    employee_router,
+    tags=["Employees"]
+)
+# ==================================================
+# ================= NEW: AUTH & TRACKING ===========
+# ==================================================
+
+@app.post("/api/login")
+async def login(data: dict):
+    """Temporary login bypass for testing"""
+    emp_id = data.get("employeeId")
+    pwd = data.get("password")
+    if emp_id == "EMP001" and pwd == "EMP@123":
+        return {"status": "success", "message": "Login successful", "employeeId": emp_id}
+    return {"status": "error", "message": "Invalid credentials"}
+
+@app.post("/api/location")
+async def update_location(
+    employeeId: str = Form(...), 
+    lat: float = Form(...), 
+    lng: float = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Temporary location tracking for testing"""
+    # This will show up in your terminal logs
+    print(f"TRACKING LOG -> Employee: {employeeId} | Lat: {lat} | Lng: {lng}")
+    return {
+        "status": "success", 
+        "message": "Location updated", 
+        "received": {"id": employeeId, "lat": lat, "lng": lng}
+    }
 
 # ==================================================
 # ================= EMPLOYEES ======================
@@ -313,7 +363,7 @@ def present_today():
             FROM attendance
             WHERE date = CURRENT_DATE
               AND status='Present'
-        """)
+        """, )
         return {"present_today": cur.fetchone()[0]}
     finally:
         cur.close()
