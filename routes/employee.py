@@ -2,10 +2,12 @@ from fastapi import APIRouter, HTTPException
 from db import get_cursor
 from utils.id_card_pdf import generate_id_card
 from utils.s3_client import upload_file_to_s3
-import os
 
-router = APIRouter()
+router = APIRouter(prefix="/employee", tags=["Employee"])
 
+# =========================
+# EMPLOYEE ID CARD API
+# =========================
 @router.get("/employees/{employee_code}/id-card")
 def get_employee_id_card(employee_code: str):
     conn, cur = get_cursor()
@@ -77,3 +79,22 @@ def get_employee_id_card(employee_code: str):
     finally:
         cur.close()
         conn.close()
+
+
+# =========================
+# DASHBOARD ROUTES (FROM TEAMMATE)
+# =========================
+
+@router.get("/dashboard")
+def employee_dashboard():
+    return {"dashboard": "Employee Dashboard"}
+
+
+@router.get("/manager/dashboard")
+def manager_dashboard():
+    return {"dashboard": "Manager Dashboard"}
+
+
+@router.get("/admin/dashboard")
+def admin_dashboard():
+    return {"dashboard": "Admin Dashboard"}

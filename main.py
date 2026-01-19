@@ -1,33 +1,35 @@
 from dotenv import load_dotenv
 load_dotenv()
-from fastapi import FastAPI, HTTPException, Form, Depends
+
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional, List
-from fastapi import Body, HTTPException
+from typing import Optional
 
 from sqlalchemy.orm import Session
-# Import your DB helpers from db.py
+
+# DB helpers
 from db import get_cursor, get_db
 
-# Only importing candidate router as employee_tracking is missing
+# Routers
 from routes.candidate_evaluation import router as candidate_router
-
-from crud import employee_profile_edit  # <-- ADDED (your CRUD module)
-
-
 from routes.employee import router as employee_router
+from routes.auth import router as auth_router
+from routes.admin import router as admin_router
+
+from crud import employee_profile_edit
 
 
+# ==================================================
+# APP INIT
+# ==================================================
 
+app = FastAPI(title="HRMS Backend")
 
-# 1. Initialize the FastAPI app
-
-app = FastAPI()
-
-# --------------------------------------------------
+# ==================================================
 # CORS
-# --------------------------------------------------
+# ==================================================
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -36,54 +38,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --------------------------------------------------
+# ==================================================
+# ROUTER REGISTRATION
+# ==================================================
 
-# CANDIDATE EVALUATION ROUTE --------------------------------------------------
+app.include_router(
+    auth_router,
+    tags=["Auth"]
+)
 
-# ROUTER INCLUSIONS
-# --------------------------------------------------
-# Candidate router is active
+app.include_router(
+    admin_router,
+    tags=["Admin"]
+)
+
+app.include_router(
+    employee_router,
+    tags=["Employee"]
+)
 
 app.include_router(
     candidate_router,
     prefix="/candidates",
     tags=["Candidate Evaluation"]
 )
-app.include_router(
-    employee_router,
-    tags=["Employees"]
-)
-# ==================================================
-# ================= NEW: AUTH & TRACKING ===========
-# ==================================================
-
-@app.post("/api/login")
-async def login(data: dict):
-    """Temporary login bypass for testing"""
-    emp_id = data.get("employeeId")
-    pwd = data.get("password")
-    if emp_id == "EMP001" and pwd == "EMP@123":
-        return {"status": "success", "message": "Login successful", "employeeId": emp_id}
-    return {"status": "error", "message": "Invalid credentials"}
-
-@app.post("/api/location")
-async def update_location(
-    employeeId: str = Form(...), 
-    lat: float = Form(...), 
-    lng: float = Form(...),
-    db: Session = Depends(get_db)
-):
-    """Temporary location tracking for testing"""
-    # This will show up in your terminal logs
-    print(f"TRACKING LOG -> Employee: {employeeId} | Lat: {lat} | Lng: {lng}")
-    return {
-        "status": "success", 
-        "message": "Location updated", 
-        "received": {"id": employeeId, "lat": lat, "lng": lng}
-    }
 
 # ==================================================
-# ================= EMPLOYEES ======================
+# EMPLOYEE CREATE (LEGACY)
 # ==================================================
 
 class EmployeeCreate(BaseModel):
@@ -122,8 +103,8 @@ def create_employee(emp: EmployeeCreate):
         cur.close()
         conn.close()
 
-## ==================================================
-# ============ EMPLOYEE PROFILE ====================
+# ==================================================
+# EMPLOYEE PROFILE
 # ==================================================
 
 @app.get("/employee/{emp_code}")
@@ -167,130 +148,7 @@ def update_contacts(emp_code: str, data: dict = Body(...)):
     )
 
 # ==================================================
-# ================= ASSETS (UPDATED) ===============
-# ==================================================
-
-class AssetBase(BaseModel):
-    asset_name: str
-    category: str
-    status: str
-    description: Optional[str] = None
-    assigned_emp_id: Optional[str] = None
-    assigned_emp_name: Optional[str] = None
-
-
-class AssetCreate(AssetBase):
-    pass
-
-
-class Asset(AssetBase):
-    id: int
-
-
-@app.get("/assets", response_model=List[Asset])
-def get_assets():
-    conn, cur = get_cursor()
-    try:
-        cur.execute("""
-            SELECT id, asset_name, category, status, description,
-                   assigned_emp_id, assigned_emp_name
-            FROM assets
-            ORDER BY id DESC
-        """)
-        rows = cur.fetchall()
-        return [
-            {
-                "id": r[0],
-                "asset_name": r[1],
-                "category": r[2],
-                "status": r[3],
-                "description": r[4],
-                "assigned_emp_id": r[5],
-                "assigned_emp_name": r[6],
-            }
-            for r in rows
-        ]
-    finally:
-        cur.close()
-        conn.close()
-
-
-@app.post("/assets")
-def create_asset(asset: AssetCreate):
-    conn, cur = get_cursor()
-    try:
-        cur.execute("""
-            INSERT INTO assets
-            (asset_name, category, status, description, assigned_emp_id, assigned_emp_name)
-            VALUES (%s,%s,%s,%s,%s,%s)
-            RETURNING id
-        """, (
-            asset.asset_name,
-            asset.category,
-            asset.status,
-            asset.description,
-            asset.assigned_emp_id,
-            asset.assigned_emp_name
-        ))
-        new_id = cur.fetchone()[0]
-        conn.commit()
-        return {"id": new_id, "status": "success"}
-    except Exception as e:
-        conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cur.close()
-        conn.close()
-
-
-@app.put("/assets/{asset_id}")
-def update_asset(asset_id: int, asset: AssetCreate):
-    conn, cur = get_cursor()
-    try:
-        cur.execute("""
-            UPDATE assets
-            SET asset_name=%s,
-                category=%s,
-                status=%s,
-                description=%s,
-                assigned_emp_id=%s,
-                assigned_emp_name=%s
-            WHERE id=%s
-        """, (
-            asset.asset_name,
-            asset.category,
-            asset.status,
-            asset.description,
-            asset.assigned_emp_id,
-            asset.assigned_emp_name,
-            asset_id
-        ))
-        conn.commit()
-        return {"status": "updated"}
-    except Exception as e:
-        conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cur.close()
-        conn.close()
-
-
-@app.delete("/assets/{asset_id}")
-def delete_asset(asset_id: int):
-    conn, cur = get_cursor()
-    try:
-        cur.execute("DELETE FROM assets WHERE id=%s", (asset_id,))
-        conn.commit()
-        return {"status": "deleted"}
-    except Exception as e:
-        conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cur.close()
-        conn.close()
-
-# ==================================================
-# ================= LEAVE ==========================
+# LEAVE APPROVAL
 # ==================================================
 
 class LeaveApprove(BaseModel):
@@ -316,33 +174,7 @@ def approve_leave(data: LeaveApprove):
         conn.close()
 
 # ==================================================
-# ================= ANNOUNCEMENTS ==================
-# ==================================================
-
-class AnnouncementCreate(BaseModel):
-    title: str
-    message: str
-
-
-@app.post("/announcements")
-def create_announcement(data: AnnouncementCreate):
-    conn, cur = get_cursor()
-    try:
-        cur.execute("""
-            INSERT INTO announcements (title, message)
-            VALUES (%s,%s)
-        """, (data.title, data.message))
-        conn.commit()
-        return {"status": "announcement_created"}
-    except Exception as e:
-        conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cur.close()
-        conn.close()
-
-# ==================================================
-# ================= DASHBOARD ======================
+# DASHBOARD SUMMARY
 # ==================================================
 
 @app.get("/dashboard/total-employees")
@@ -365,7 +197,7 @@ def present_today():
             FROM attendance
             WHERE date = CURRENT_DATE
               AND status='Present'
-        """, )
+        """)
         return {"present_today": cur.fetchone()[0]}
     finally:
         cur.close()
@@ -403,7 +235,6 @@ def attendance_summary():
         cur.close()
         conn.close()
 
-
 @app.get("/dashboard/department-strength")
 def department_strength():
     conn, cur = get_cursor()
@@ -417,30 +248,3 @@ def department_strength():
     finally:
         cur.close()
         conn.close()
-
-# ==================================================
-# ================= REWARDS ========================
-# ==================================================
-
-@app.post("/rewards")
-def rewards(data: dict):
-    conn, cur = get_cursor()
-    try:
-        cur.execute("""
-            INSERT INTO job_work
-            (job_title, hours_spent, description, employee_name)
-            VALUES (%s, 0, %s, %s)
-        """, (
-            data.get("reward_title"),
-            data.get("reward_title"),
-            data.get("emp_code")
-        ))
-        conn.commit()
-        return {"status": "reward_added"}
-    except Exception as e:
-        conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cur.close()
-        conn.close()
-
