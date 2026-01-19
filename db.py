@@ -1,6 +1,7 @@
 import psycopg2
 from fastapi import HTTPException
 
+
 def get_connection():
     try:
         return psycopg2.connect(
@@ -34,3 +35,18 @@ def get_db():
         yield conn
     finally:
         conn.close()
+
+
+# ==================================================
+# ✅ ADDED FOR AUTH / ADMIN MODULE COMPATIBILITY
+# ==================================================
+
+def get_db_conn():
+    """
+    Compatibility helper for auth/admin code.
+    Returns a psycopg2 connection only.
+    """
+    conn = get_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+    return conn
