@@ -1,18 +1,23 @@
+# routes/admin.py
+
 from fastapi import APIRouter, HTTPException
 from schemas.employee import CreateEmployee
 from db import get_db_conn
 from crud.auth_crud import hash_password
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
+
+
 @router.post("/create-employee")
 def create_employee(data: CreateEmployee):
     conn = get_db_conn()
     cur = conn.cursor()
 
     try:
+        # One-time default password
         default_password = hash_password("Welcome@123")
 
-        # Check duplicate emp_code or email
+        # Check duplicate employee
         cur.execute(
             "SELECT user_id FROM users WHERE emp_code=%s OR email=%s",
             (data.emp_code, data.email)
@@ -20,7 +25,7 @@ def create_employee(data: CreateEmployee):
         if cur.fetchone():
             raise HTTPException(status_code=400, detail="Employee already exists")
 
-        # Insert into users table
+        # Insert into USERS (login table)
         cur.execute("""
             INSERT INTO users (
                 first_name,
@@ -42,7 +47,9 @@ def create_employee(data: CreateEmployee):
             data.role.upper()
         ))
 
-        # Insert into employees table
+        user_id = cur.fetchone()[0]
+
+        # Insert into EMPLOYEES (profile table)
         cur.execute("""
             INSERT INTO employees (
                 emp_code,
@@ -66,14 +73,15 @@ def create_employee(data: CreateEmployee):
 
         return {
             "message": "Employee created successfully",
-            "emp_code": data.emp_code
+            "emp_code": data.emp_code,
+            "temporary_password": "Welcome@123"
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-
     finally:
         cur.close()
         conn.close()
-
