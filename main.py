@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 # DB helpers
 from db import get_cursor, get_db
 from database import get_db
-
+from database_holiday import Base,engine,get_db
 # Routers
 from routes.candidate_evaluation import router as candidate_router
 from routes.employee import router as employee_router
@@ -19,6 +19,10 @@ from routes.auth import router as auth_router
 from routes.admin import router as admin_router
 # payslip likith: 
 from routes.payroll_likith import router
+#holiday-calender sravya:
+from routes.holidays_sravya import router as holidays_router
+from routes.weekly_offs_sravya import router as weekly_offs_router
+
 
 from crud import employee_profile_edit
 
@@ -67,6 +71,10 @@ app.include_router(
 )
 #payslip likith"
 app.include_router(router)
+
+#holiday-calender sravya:
+app.include_router(holidays_router)
+app.include_router(weekly_offs_router)
 
 
 # ==================================================
