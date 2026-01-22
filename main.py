@@ -5,7 +5,8 @@ from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
-
+from routes.course_creation import router
+from database import Base, engine
 from sqlalchemy.orm import Session
 
 # DB helpers
@@ -248,3 +249,11 @@ def department_strength():
     finally:
         cur.close()
         conn.close()
+        
+# ==================================================
+# COURSE CREATION
+# ==================================================
+
+Base.metadata.create_all(bind=engine)
+app = FastAPI(title="Course Creation API")
+app.include_router(router)

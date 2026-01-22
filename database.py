@@ -9,7 +9,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --------------------------------------------------
-
 # SSH CONFIG
 # --------------------------------------------------
 SSH_HOST = os.getenv("SSH_HOST", "122.186.222.20")
