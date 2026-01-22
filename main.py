@@ -20,6 +20,7 @@ from routes.admin import router as admin_router
 from crud import employee_profile_edit
 
 
+
 # ==================================================
 # APP INIT
 # ==================================================
@@ -248,3 +249,14 @@ def department_strength():
     finally:
         cur.close()
         conn.close()
+#====================================================
+#Biomertic_Attandance_ RAM
+#====================================================
+
+from fastapi import FastAPI
+from routes import Biomertic_Attandance_biometric, Biomertic_Attandance_assignment
+
+app = FastAPI(title="Biometric Attendance Integration")
+
+app.include_router(Biomertic_Attandance_biometric.router)
+app.include_router(Biomertic_Attandance_assignment.router)
