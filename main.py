@@ -10,12 +10,15 @@ from sqlalchemy.orm import Session
 
 # DB helpers
 from db import get_cursor, get_db
+from database import get_db
 
 # Routers
 from routes.candidate_evaluation import router as candidate_router
 from routes.employee import router as employee_router
 from routes.auth import router as auth_router
 from routes.admin import router as admin_router
+# payslip likith: 
+from routes.payroll_likith import router
 
 from crud import employee_profile_edit
 
@@ -62,6 +65,9 @@ app.include_router(
     prefix="/candidates",
     tags=["Candidate Evaluation"]
 )
+#payslip likith"
+app.include_router(router)
+
 
 # ==================================================
 # EMPLOYEE CREATE (LEGACY)
