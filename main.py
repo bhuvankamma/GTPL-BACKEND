@@ -260,3 +260,14 @@ app = FastAPI(title="Biometric Attendance Integration")
 
 app.include_router(Biomertic_Attandance_biometric.router)
 app.include_router(Biomertic_Attandance_assignment.router)
+
+#===================================================================
+#ADMIN_DOCUMENTS
+#=============================================================================
+
+from fastapi import FastAPI
+from routes.admin_documents import router as admin_router
+
+app = FastAPI(title="Admin Documents Module")
+
+app.include_router(admin_router)
