@@ -22,7 +22,13 @@ from routes.payroll_likith import router
 #holiday-calender sravya:
 from routes.holidays_sravya import router as holidays_router
 from routes.weekly_offs_sravya import router as weekly_offs_router
-
+#bonus and incentives sravya:
+from routes.admin_rewards_sra import router as admin_rewards_router
+from routes.manager_rewards_sra import router as manager_rewards_router
+from routes.employee_rewards_sra import router as employee_rewards_router
+from routes.bonus_rules_sra import router as bonus_rules_router
+from routes.incentive_rules_sra import router as incentive_rules_router
+from routes.manager_rules_sra import router as manager_rules_router
 
 from crud import employee_profile_edit
 
@@ -76,6 +82,13 @@ app.include_router(router)
 app.include_router(holidays_router)
 app.include_router(weekly_offs_router)
 
+#bonus and incentives sravya:
+app.include_router(manager_rewards_router)
+app.include_router(admin_rewards_router)
+app.include_router(employee_rewards_router)
+app.include_router(bonus_rules_router)
+app.include_router(incentive_rules_router)
+app.include_router(manager_rules_router)
 
 # ==================================================
 # EMPLOYEE CREATE (LEGACY)
