@@ -11,6 +11,8 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, String, Boolean, Date, DateTime
 from sqlalchemy.sql import func
 from database_B import Base
+from database import Base
+
 
 
 # =====================================================

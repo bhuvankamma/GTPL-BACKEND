@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from typing import Optional
 from routes.course_creation import router
 from database_B import Base, engine
+from database import Base, engine
 from sqlalchemy.orm import Session
 from fastapi import FastAPI
 

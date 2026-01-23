@@ -2,8 +2,7 @@ from fastapi import HTTPException, status, Header
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from database_B import SessionLocal
-
-
+from database import SessionLocal
 from typing import Optional
 
 def link_status(url: Optional[str]):

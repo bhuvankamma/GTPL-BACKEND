@@ -1,41 +1,14 @@
-import psycopg2
-from fastapi import HTTPException
 from sshtunnel import SSHTunnelForwarder
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from urllib.parse import quote_plus
 import logging
 import os
- 
-def get_connection():
-    try:
-        return psycopg2.connect(
-            host="localhost",
-            port=5432,
-            database="hrms_crm",
-            user="hrms_user",
-            password="Loveudad43#",
-            connect_timeout=5
-        )
-    except Exception as e:
-        print("DB ERROR:", e)
-        return None
- 
-
-def get_cursor():
-    conn = get_connection()
-    if not conn:
-        raise HTTPException(status_code=500, detail="Database connection failed")
-    return conn, conn.cursor()
- 
- 
-
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --------------------------------------------------
-
 # SSH CONFIG
 # --------------------------------------------------
 SSH_HOST = os.getenv("SSH_HOST", "122.186.222.20")
@@ -101,27 +74,4 @@ def get_connection():
     Returns a raw psycopg connection
     Useful for cursor-based SQL (legacy / lambda-style code)
     """
-    conn = get_connection()
-    if not conn:
-        raise HTTPException(status_code=500, detail="Database connection failed")
-    try:
-        yield conn
-    finally:
-        conn.close()
- 
- 
-# ==================================================
-# ✅ ADDED FOR AUTH / ADMIN MODULE COMPATIBILITY
-# ==================================================
- 
-def get_db_conn():
-    """
-    Compatibility helper for auth/admin code.
-    Returns a psycopg2 connection only.
-    """
-    conn = get_connection()
-    if not conn:
-        raise HTTPException(status_code=500, detail="Database connection failed")
-    return conn
-
     return engine.raw_connection()

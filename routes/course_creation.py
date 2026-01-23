@@ -5,6 +5,8 @@ from sqlalchemy import text
 from database_B import SessionLocal
 from crud import course_creation
 from models.course_creation import Lesson
+from database import SessionLocal
+from crud import course_creation
 from models.course_creation import Portal
 from schemas.course_creation import (
     PortalCreate,
@@ -34,6 +36,23 @@ router = APIRouter()
 # =====================================================
 # PORTAL ROUTES
 # =====================================================
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+router = APIRouter()
+
+
+# =====================================================
+# PORTAL ROUTES
+# =====================================================
+
 
 # 1️⃣ LIST PORTALS
 @router.get("/portal")
@@ -168,6 +187,7 @@ def get_lessons(
 ):
     return course_creation.get_lessons(db, module_id)
 
+
 def create_lesson(db: Session, data):
     lesson = Lesson(
         module_id=data.module_id,
@@ -203,6 +223,7 @@ def complete_lesson(
     )
     db.commit()
     return {"message": "Lesson completed"}
+
 
 @router.put("/lesson/{lesson_id}", dependencies=[Depends(manager_only)])
 def update_lesson(
