@@ -95,3 +95,14 @@ def get_connection():
     Useful for cursor-based SQL (legacy / lambda-style code)
     """
     return engine.raw_connection()
+
+def get_db_conn():
+    return pg8000.connect(
+        host="127.0.0.1",
+        port=ssh_tunnel.local_bind_port,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
+        ssl_context=None,
+        timeout=30
+    )

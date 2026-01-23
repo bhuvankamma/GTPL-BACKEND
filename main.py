@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from fastapi import FastAPI
 
 # DB helpers
-from db import get_db, get_cursor
+from db import get_cursor
 
 
 # Routers
@@ -22,6 +22,8 @@ from routes.auth import router as auth_router
 from routes.admin import router as admin_router
 
 from crud import employee_profile_edit
+from routes.form12bb import router as form12bb_router
+from routes.declaration_form12bb import router as declaration_router
 
 
 # ==================================================
@@ -260,3 +262,16 @@ def department_strength():
 Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Course Creation API")
 app.include_router(router)
+
+        
+# ==================================================
+# FORM12BB
+# ==================================================
+
+app = FastAPI(title="Form 12BB API")
+app.include_router(form12bb_router)
+app.include_router(declaration_router)
+
+@app.get("/")
+def root():
+    return {"message": "Form12BB FastAPI running"}
