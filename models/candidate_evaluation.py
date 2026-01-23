@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, Text
-from database import Base   # 👈 USE YOUR EXISTING BASE
+from database_B import Base   # 👈 USE YOUR EXISTING BASE
 
 class Candidate(Base):
     __tablename__ = "candidates"
