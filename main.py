@@ -5,6 +5,8 @@ from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
+from fastapi import FastAPI
+from routes.ticketdashboard import router
 
 from sqlalchemy.orm import Session
 
@@ -248,3 +250,10 @@ def department_strength():
     finally:
         cur.close()
         conn.close()
+
+
+#ticketdashboard#
+
+app = FastAPI(title="Ticket Dashboard API")
+
+app.include_router(router)
