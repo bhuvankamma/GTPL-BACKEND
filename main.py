@@ -42,7 +42,12 @@ from database_su import get_db
 from crud.employee_tracking_websocket_manager import ConnectionManager
 from utils.Employee_tracking_geo import haversine
 
-
+#============================
+#employee profile
+#============================
+from routes.profile_employee_profile import router as profile_employee_router
+from routes.profile_admin_profile import router as profile_admin_router
+from routes.profile_employee_header import router as profile_employee_header_router
 
 # ==================================================
 # APP INIT
@@ -61,6 +66,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+#============================
+#employee profile
+#============================
+
+app = FastAPI(title="HRMS Employee Profile")
+
+app.include_router(profile_employee_header_router)
+# Employee profile routes
+app.include_router(employee_router)
+
+# Admin profile routes
+app.include_router(admin_router)
 
 # ==================================================
 # ROUTER REGISTRATION
