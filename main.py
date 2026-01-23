@@ -20,11 +20,12 @@ from routes.candidate_evaluation import router as candidate_router
 from routes.employee import router as employee_router
 from routes.auth import router as auth_router
 from routes.admin import router as admin_router
-
 from crud import employee_profile_edit
 from routes.form12bb import router as form12bb_router
 from routes.declaration_form12bb import router as declaration_router
 
+from routes.form12bb import router as form12bb_router
+from routes.declaration_form12bb import router as declaration_router
 
 # ==================================================
 # APP INIT
@@ -254,7 +255,7 @@ def department_strength():
     finally:
         cur.close()
         conn.close()
-        
+
 # ==================================================
 # COURSE CREATION
 # ==================================================
@@ -263,12 +264,16 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Course Creation API")
 app.include_router(router)
 
-        
 # ==================================================
 # FORM12BB
 # ==================================================
 
 app = FastAPI(title="Form 12BB API")
+
+app = FastAPI(title="Form 12BB API")
+
+# 🔥 Run once on startup (Lambda cold start equivalent)
+
 app.include_router(form12bb_router)
 app.include_router(declaration_router)
 

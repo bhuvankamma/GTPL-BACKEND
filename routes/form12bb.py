@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from database_B import get_db_conn
-from models.s3_form12bb import (
+from crud.form12bb_s3 import (
     upload_file,
     delete_file,
     generate_presigned_url,
