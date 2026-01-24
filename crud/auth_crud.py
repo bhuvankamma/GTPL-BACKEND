@@ -2,6 +2,7 @@ from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 def _normalize_password(password: str) -> str:
     """
     bcrypt supports max 72 bytes.
@@ -17,4 +18,10 @@ def hash_password(password: str) -> str:
 
 def verify_password(password: str, hashed: str) -> bool:
     password = _normalize_password(password)
+
+def hash_password(password: str):
+    return pwd_context.hash(password)
+
+def verify_password(password: str, hashed: str):
+
     return pwd_context.verify(password, hashed)

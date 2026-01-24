@@ -1,35 +1,55 @@
+import os
+import logging
 from dotenv import load_dotenv
-load_dotenv()
+
+# Load environment variables
+load_dotenv(override=True)
 
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
-
 from sqlalchemy.orm import Session
 
 # DB helpers
 from db import get_cursor, get_db
-# policy databadse sravya
-from database_policy import get_db_conn
+# policy database sravya
+try:
+    from database_policy import get_db_conn
+except ImportError:
+    pass
+
+# SQLAlchemy/Bhavani DB setup
+try:
+    from database import Base, engine
+    # If Bhavani has a separate second database
+    from database_B import Base as Base_B, engine as engine_B
+except ImportError:
+    pass
 
 # Routers
 from routes.candidate_evaluation import router as candidate_router
 from routes.employee import router as employee_router
 from routes.auth import router as auth_router
 from routes.admin import router as admin_router
-
-# policy router sravya:
 from routes.routers_policy import router as policy_router
+from routes.course_creation import router as course_router
+from routes.form12bb import router as form12bb_router
+from routes.declaration_form12bb import router as declaration_router
 
 from crud import employee_profile_edit
-
 
 # ==================================================
 # APP INIT
 # ==================================================
 
-app = FastAPI(title="HRMS Backend")
+app = FastAPI(title="HRMS Integrated Backend")
+
+# Create tables for SQLAlchemy models on startup
+try:
+    Base.metadata.create_all(bind=engine)
+except NameError:
+    pass
 
 # ==================================================
 # CORS
@@ -47,22 +67,13 @@ app.add_middleware(
 # ROUTER REGISTRATION
 # ==================================================
 
-app.include_router(
-    auth_router,
-    tags=["Auth"]
-)
+app.include_router(auth_router, tags=["Auth"])
 print("✅ AUTH ROUTER LOADED")
 
-app.include_router(
-    admin_router,
-    tags=["Admin"]
-)
+app.include_router(admin_router, tags=["Admin"])
 print("✅ ADMIN ROUTER LOADED")
 
-app.include_router(
-    employee_router,
-    tags=["Employee"]
-)
+app.include_router(employee_router, tags=["Employee"])
 print("✅ EMPLOYEE ROUTER LOADED")
 
 app.include_router(
@@ -73,11 +84,22 @@ app.include_router(
 print("✅ CANDIDATE EVALUATION ROUTER LOADED")
 
 # policy router sravya:
-app.include_router(policy_router)
+app.include_router(policy_router, tags=["Policies"])
+print("✅ POLICY ROUTER LOADED")
+
+# Bhavani's Modules
+app.include_router(course_router, prefix="/courses", tags=["Course Creation"])
+app.include_router(form12bb_router, prefix="/form12bb", tags=["Form12BB"])
+app.include_router(declaration_router, prefix="/declaration", tags=["Form12BB"])
+print("✅ BHAVANI'S ROUTERS LOADED")
 
 # ==================================================
-# EMPLOYEE CREATE (LEGACY)
+# ROOT & LEGACY ENDPOINTS
 # ==================================================
+
+@app.get("/")
+def root():
+    return {"message": "HRMS Integrated API Running"}
 
 class EmployeeCreate(BaseModel):
     emp_code: str
