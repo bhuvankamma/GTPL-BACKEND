@@ -1,5 +1,8 @@
+
 # routes/admin.py
 
+=======
+print("✅ ADMIN ROUTER LOADED FROM routes/admin.py")
 from fastapi import APIRouter, HTTPException
 from schemas.employee import CreateEmployee
 from db import get_db_conn

@@ -46,22 +46,26 @@ app.include_router(
     auth_router,
     tags=["Auth"]
 )
+print("✅ AUTH ROUTER LOADED")
 
 app.include_router(
     admin_router,
     tags=["Admin"]
 )
+print("✅ ADMIN ROUTER LOADED")
 
 app.include_router(
     employee_router,
     tags=["Employee"]
 )
+print("✅ EMPLOYEE ROUTER LOADED")
 
 app.include_router(
     candidate_router,
     prefix="/candidates",
     tags=["Candidate Evaluation"]
 )
+print("✅ CANDIDATE EVALUATION ROUTER LOADED")
 
 # ==================================================
 # EMPLOYEE CREATE (LEGACY)
