@@ -82,6 +82,9 @@ from routes.profile_employee_profile import router as profile_employee_router
 from routes.profile_admin_profile import router as profile_admin_router
 from routes.profile_employee_header import router as profile_employee_header_router
 
+# Swapna's Router
+from routes.ticketdashboard import router as ticket_router
+
 from crud import employee_profile_edit
 
 # ==================================================
@@ -155,21 +158,70 @@ app.include_router(declaration_router, prefix="/declaration", tags=["Form12BB"])
 # Likith's Modules
 app.include_router(payroll_router, prefix="/payroll", tags=["Payroll"])
 
+# Swapna's Module
+app.include_router(ticket_router, prefix="/tickets", tags=["Ticket Dashboard"])
+
 print("✅ ALL TEAM ROUTERS LOADED SUCCESSFULLY")
 
 # ==================================================
-# ROOT & DASHBOARD
+# ROOT & DASHBOARD ENDPOINTS
 # ==================================================
 
 @app.get("/")
 def root():
     return {"message": "HRMS Integrated API Running"}
 
-# ... (Keep existing dashboard endpoints: /employees, /employee/{emp_code}, /dashboard/* etc) ...
-# [Note: Paste your existing dashboard and profile functions here for space efficiency]
+class EmployeeCreate(BaseModel):
+    emp_code: str
+    first_name: str
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    department: Optional[str] = None
+    password: str
+    status: Optional[str] = "Active"
+
+@app.post("/employees")
+def create_employee(emp: EmployeeCreate):
+    conn, cur = get_cursor()
+    try:
+        cur.execute("""
+            INSERT INTO employees (emp_code, first_name, last_name, email, department, password, status)
+            VALUES (%s,%s,%s,%s,%s,%s,%s)
+        """, (emp.emp_code, emp.first_name, emp.last_name, emp.email, emp.department, emp.password, emp.status))
+        conn.commit()
+        return {"status": "employee_created"}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
+
+@app.get("/employee/{emp_code}")
+def get_profile(emp_code: str):
+    profile = employee_profile_edit.get_employee_profile(emp_code)
+    if not profile.get("employee"):
+        raise HTTPException(status_code=404, detail="Employee not found")
+    return profile
+
+@app.put("/employee/{emp_code}/personal")
+def update_personal(emp_code: str, data: dict = Body(...)):
+    return employee_profile_edit.update_personal(emp_code, data)
+
+@app.get("/dashboard/total-employees")
+def total_employees():
+    conn, cur = get_cursor()
+    try:
+        cur.execute("SELECT COUNT(*) FROM employees")
+        return {"total_employees": cur.fetchone()[0]}
+    finally:
+        cur.close()
+        conn.close()
+
+# ... (Additional profile/dashboard PUT/GET methods remain unchanged)
 
 # ==================================================
-# SUMANTH - LIVE TRACKING & GEOFENCING
+# SUMANTH - LIVE TRACKING & WEBSOCKET
 # ==================================================
 
 @app.post("/api/login")
@@ -210,6 +262,7 @@ async def update_location(employeeId: str = Form(...), lat: float = Form(...), l
 async def admin_ws(ws: WebSocket):
     await manager.connect(ws)
     try:
-        while True: await ws.receive_text()
+        while True:
+            await ws.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(ws)
