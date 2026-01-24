@@ -1,4 +1,4 @@
-from app.database import get_db_conn, logger
+from database_B import get_db_conn, logger
 
 # ==================================================
 # 🔥 TABLE CREATION — FULL & EXACT

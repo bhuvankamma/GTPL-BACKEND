@@ -11,6 +11,11 @@ from database import Base, engine
 from sqlalchemy.orm import Session
 from fastapi import FastAPI
 
+
+from fastapi import FastAPI
+from database_B import ensure_tables
+from routes.service_configs_sNw import router
+
 # DB helpers
 from db import get_cursor
 
@@ -280,3 +285,19 @@ app.include_router(declaration_router)
 @app.get("/")
 def root():
     return {"message": "Form12BB FastAPI running"}
+
+# ==================================================
+# FORM12BB
+# ==================================================
+
+app = FastAPI(title="Service & Warranty API")
+
+@app.on_event("startup")
+def startup():
+    ensure_tables()
+
+app.include_router(router)
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}

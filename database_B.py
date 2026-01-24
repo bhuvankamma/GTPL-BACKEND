@@ -7,6 +7,7 @@ import os
 import boto3
 import pg8000
 import ssl
+from contextlib import contextmanager
 
 
 logging.basicConfig(level=logging.INFO)
@@ -96,6 +97,7 @@ def get_connection():
     """
     return engine.raw_connection()
 
+
 def get_db_conn():
     return pg8000.connect(
         host="127.0.0.1",
@@ -106,3 +108,23 @@ def get_db_conn():
         ssl_context=None,
         timeout=30
     )
+# --------------------------------------------------
+# CONTEXT MANAGED RAW CONNECTION
+# --------------------------------------------------
+@contextmanager
+def get_connection():
+    conn = None
+    try:
+        conn = engine.raw_connection()
+        yield conn
+    finally:
+        if conn:
+            conn.close()
+
+def ensure_tables():
+    """
+    Ensures all required tables exist.
+    Safe to run multiple times.
+    """
+
+    logger.info("Ensuring database tables...")

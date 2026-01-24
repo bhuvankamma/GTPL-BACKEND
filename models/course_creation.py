@@ -15,6 +15,9 @@ from database import Base
 
 
 
+from database import Base
+
+
 # =====================================================
 # PORTAL MODEL
 # =====================================================
