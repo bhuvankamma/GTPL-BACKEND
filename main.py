@@ -10,12 +10,17 @@ from sqlalchemy.orm import Session
 
 # DB helpers
 from db import get_cursor, get_db
+# policy databadse sravya
+from database_policy import get_db_conn
 
 # Routers
 from routes.candidate_evaluation import router as candidate_router
 from routes.employee import router as employee_router
 from routes.auth import router as auth_router
 from routes.admin import router as admin_router
+
+# policy router sravya:
+from routes.routers_policy import router as policy_router
 
 from crud import employee_profile_edit
 
@@ -66,6 +71,9 @@ app.include_router(
     tags=["Candidate Evaluation"]
 )
 print("✅ CANDIDATE EVALUATION ROUTER LOADED")
+
+# policy router sravya:
+app.include_router(policy_router)
 
 # ==================================================
 # EMPLOYEE CREATE (LEGACY)
