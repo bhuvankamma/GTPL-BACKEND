@@ -12,6 +12,8 @@ from sqlalchemy.orm import Session
 from db import get_cursor, get_db
 # policy databadse sravya
 from database_policy import get_db_conn
+# attendance database sravya :
+from database_attendance import get_db
 
 # Routers
 from routes.candidate_evaluation import router as candidate_router
@@ -21,6 +23,20 @@ from routes.admin import router as admin_router
 
 # policy router sravya:
 from routes.routers_policy import router as policy_router
+
+# attendance router sravya:
+
+from routes.attendance_atd_sra import router as attendance_router
+from routes.atd_corrections_atd_sra import router as attendance_corrections_router
+from routes.timesheet_atd_sra import router as timesheet_router
+from routes.overtime_atd_sra import router as overtime_router
+from routes.leave_atd_sra import router as leave_router
+from routes.calendar_atd_sra import router as calendar_router
+from routes.shift_atd_sra import router as shift_router
+from routes.manager_atd_sra import router as manager_router
+from routes.admin_atd_sra import router as admin_atd_router
+from routes.dashboard_atd_sra import router as dashboard_router
+
 
 from crud import employee_profile_edit
 
@@ -70,6 +86,20 @@ app.include_router(
 
 # policy router sravya:
 app.include_router(policy_router)
+
+
+# attendance router sravya:
+app.include_router(attendance_router)
+app.include_router(attendance_corrections_router)
+app.include_router(timesheet_router)
+app.include_router(overtime_router)
+app.include_router(leave_router)
+app.include_router(calendar_router)
+app.include_router(shift_router)
+app.include_router(manager_router)
+app.include_router(admin_atd_router)
+app.include_router(dashboard_router)
+
 
 # ==================================================
 # EMPLOYEE CREATE (LEGACY)
