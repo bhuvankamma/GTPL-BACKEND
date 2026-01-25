@@ -15,6 +15,9 @@ from database_policy import get_db_conn
 # attendance database sravya :
 from database_attendance import get_db
 
+# login database sravya 
+from database_login import get_db_conn
+
 # Routers
 from routes.candidate_evaluation import router as candidate_router
 from routes.employee import router as employee_router
@@ -40,7 +43,11 @@ from routes.dashboard_atd_sra import router as dashboard_router
 
 from crud import employee_profile_edit
 
+# login routers sravya 
 
+from routes.auth_login_sra import router as auth_login_router
+from routes.admin_login_sra import router as admin_login_router
+from routes.employee_login_sra import router as employee_login_router
 # ==================================================
 # APP INIT
 # ==================================================
@@ -100,6 +107,10 @@ app.include_router(manager_router)
 app.include_router(admin_atd_router)
 app.include_router(dashboard_router)
 
+# login router sravya 
+app.include_router(auth_login_router)
+app.include_router(admin_login_router)
+app.include_router(employee_login_router)
 
 # ==================================================
 # EMPLOYEE CREATE (LEGACY)
@@ -286,3 +297,4 @@ def department_strength():
     finally:
         cur.close()
         conn.close()
+
