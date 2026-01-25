@@ -16,6 +16,13 @@ from fastapi import FastAPI
 from database_B import ensure_tables
 from routes.service_configs_sNw import router
 
+from fastapi import FastAPI
+from routes.upload_img import router as upload_router
+
+
+
+
+
 # DB helpers
 from db import get_cursor
 
@@ -301,3 +308,10 @@ app.include_router(router)
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+# ==================================================
+# upload_img
+# ==================================================
+
+app = FastAPI(title="Employee Image Upload")
+app.include_router(upload_router)
