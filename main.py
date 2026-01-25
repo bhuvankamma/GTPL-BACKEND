@@ -6,7 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from fastapi import FastAPI
-from routes.ticketdashboard import router
+from routes.ticketdashboard import router as ticket_router
+from routes.reimbursement import router as reimbursement_router
 
 from sqlalchemy.orm import Session
 
@@ -254,6 +255,5 @@ def department_strength():
 
 #ticketdashboard#
 
-app = FastAPI(title="Ticket Dashboard API")
-
-app.include_router(router)
+app.include_router(ticket_router, tags=["Ticket Dashboard"])
+app.include_router(reimbursement_router, tags=["Reimbursement"])

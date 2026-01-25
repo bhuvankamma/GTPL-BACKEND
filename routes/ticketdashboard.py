@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Query
-from database_sw import get_connection
+from fastapi import APIRouter, Query, Depends
+from sqlalchemy.orm import Session
+from database_sw import get_db
 from crud.ticketdashboard import (
     get_summary,
     get_active_tickets,
@@ -9,24 +10,18 @@ from crud.ticketdashboard import (
 
 router = APIRouter()
 
-
 @router.get("/dashboard")
 def dashboard(
     priority: str = Query(
         default="all",
-        description="Filter tickets by priority",
         enum=["all", "high", "medium", "low"]
     ),
-    search: str | None = Query(
-        default=None,
-        description="Search tickets by title"
-    )
+    search: str | None = None,
+    db: Session = Depends(get_db),
 ):
-    conn = get_connection()
-
     return {
-        "summary": get_summary(conn),
-        "active_tickets": get_active_tickets(conn, priority, search),
-        "team_load": get_team_load(conn),
-        "categories": get_categories(conn)
+        "summary": get_summary(db),
+        "active_tickets": get_active_tickets(db, priority, search),
+        "team_load": get_team_load(db),
+        "categories": get_categories(db),
     }
