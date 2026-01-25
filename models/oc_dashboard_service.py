@@ -1,4 +1,4 @@
-from app.database import get_connection
+from database_B import get_connection
 
 
 def fetch_one(sql: str, params: tuple = ()):

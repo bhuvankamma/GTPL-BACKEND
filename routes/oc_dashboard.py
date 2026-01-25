@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.services.dashboard_service import (
+from models.oc_dashboard_service import (
     get_dashboard_counts,
     get_weekly_attendance_trend,
     get_upcoming_hr_events
