@@ -12,13 +12,12 @@ from sqlalchemy.orm import Session
 from fastapi import FastAPI
 
 
-from fastapi import FastAPI
 from database_B import ensure_tables
 from routes.service_configs_sNw import router
 
-from fastapi import FastAPI
 from routes.upload_img import router as upload_router
 
+from routes.oc_dashboard import router as dashboard_router
 
 
 
@@ -39,6 +38,9 @@ from routes.declaration_form12bb import router as declaration_router
 from routes.form12bb import router as form12bb_router
 from routes.declaration_form12bb import router as declaration_router
 
+
+from database_B import init_db
+from routes.routers_generalsettings import router as settings_router
 # ==================================================
 # APP INIT
 # ==================================================
@@ -315,3 +317,24 @@ def health():
 
 app = FastAPI(title="Employee Image Upload")
 app.include_router(upload_router)
+
+# ==================================================
+# operation_console
+# ==================================================
+
+app = FastAPI(title="Operations Console")
+
+app.include_router(dashboard_router)
+
+# ==================================================
+# general settings
+# ==================================================
+
+app = FastAPI(title="General System Settings API")
+
+@app.on_event("startup")
+def startup():
+    init_db()
+
+
+app.include_router(settings_router)

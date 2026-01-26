@@ -9,10 +9,19 @@ import pg8000
 import ssl
 from contextlib import contextmanager
 
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
+# --------------------------------------------------
+# LOAD .env (OPTIONAL)
+# --------------------------------------------------
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
+# --------------------------------------------------
+# AWS CONFIG
+# --------------------------------------------------
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_REGION = os.getenv("AWS_REGION")
@@ -47,6 +56,26 @@ DB_USER = os.getenv("DB_USER", "hrms_user")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "Loveudad43#")
 DB_NAME = os.getenv("DB_NAME", "hrms_crm")
 ENCODED_DB_PASSWORD = quote_plus(DB_PASSWORD)
+
+
+Base = declarative_base()
+ssh_tunnel = None
+engine = None
+SessionLocal = None
+
+def start_ssh_tunnel():
+    global ssh_tunnel
+    if ssh_tunnel is None or not ssh_tunnel.is_active:
+        logger.info("Starting SSH tunnel...")
+        ssh_tunnel = SSHTunnelForwarder(
+            (SSH_HOST, SSH_PORT),
+            ssh_username=SSH_USER,
+            ssh_password=SSH_PASSWORD,
+            remote_bind_address=(DB_HOST, DB_PORT),
+        )
+        ssh_tunnel.start()
+        logger.info(f"SSH tunnel started on localhost:{ssh_tunnel.local_bind_port}")
+
 
 # --------------------------------------------------
 # START SSH TUNNEL
@@ -85,7 +114,25 @@ SessionLocal = sessionmaker(
     bind=engine
 )
 
-Base = declarative_base()
+
+def init_db():
+    global engine, SessionLocal
+    start_ssh_tunnel()
+
+    if engine is None:
+        engine = create_engine(
+            DATABASE_URL(),
+            pool_pre_ping=True,
+            pool_size=2,
+            max_overflow=2,
+            future=True,
+        )
+        SessionLocal = sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            bind=engine,
+            future=True,
+        )
 
 # --------------------------------------------------
 # RAW CONNECTION (FOR CURSOR USAGE)
@@ -128,3 +175,4 @@ def ensure_tables():
     """
 
     logger.info("Ensuring database tables...")
+
