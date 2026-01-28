@@ -8,9 +8,9 @@ from models.reimbursement import (
     Reimbursement,
     ReimbursementAttachment
 )
-from models.reimbursement import Employee
-from models.reimbursement import Notification
-from models.reimbursement import User
+from models.empoffboarding import Employee
+from models.empoffboarding import Notification
+from models.empoffboarding import User
 
 from database_sw import (
     s3_client,
